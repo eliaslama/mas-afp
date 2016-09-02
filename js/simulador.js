@@ -1,18 +1,34 @@
-google.charts.load('current', {'packages': ['corechart']});
-google.charts.setOnLoadCallback(drawChart);
-function drawChart() {
+function Simulador(ingresos, afp, fondo) {
+    this.ingresos = ingresos;
+    this.afp = afp;
+    this.fondo = fondo;
 
-    var data = google.visualization.arrayToDataTable([
-        ['Task', 'Hours per Day'],
-        ['Commisiones', 10],
-        ['Ahorro', 100],
-        ['Rentabilidad', 120]
-    ]);
-
-    var options = {
-        title: 'Ahorro'
+    /**
+     * 
+     * @returns {Number}
+     */
+    this.getComisiones = function () {
+        return 10;
     };
 
-    var chart = new google.visualization.PieChart(document.getElementById('piechart'));
-    chart.draw(data, options);
+    this.getAhorro = function () {
+        return 100;
+    };
+
+    this.getRentabilidad = function () {
+        return 120;
+    };
+
+    this.getPensionRentaVitalicia = function () {
+        return 100000;
+    };
+
+    this.getPensionRetiroProgramado = function () {
+        return 90000;
+    };
+
+    this.getTrabajadoresReparto = function () {
+        return 10;
+    };
+
 }
