@@ -1,3 +1,7 @@
 #resultados {
     display: none;
 }
+
+.chart {
+    height: 300px;
+}

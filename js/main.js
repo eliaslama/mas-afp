@@ -1,11 +1,11 @@
 $(function () {
     google.charts.load('current', {'packages': ['corechart']});
     $("#btn-simular").click(function () {
-        $("#resultados").hide();
-        var simulador = prepararSimulador();
-        dibujarGrafico(simulador);
-        poblarTabla(simulador);
         $("#resultados").show();
+        var simulador = prepararSimulador();
+        dibujarGraficoTorta(simulador);
+        poblarTabla(simulador);
+        dibujarGraficoHistorico(simulador);
     });
 });
 
@@ -18,7 +18,8 @@ function prepararSimulador() {
     var ingresos = obtenerIngresos();
     var afp = $("#afp").val();
     var fondo = $("#fondo").val();
-    return new Simulador(ingresos, afp, fondo);
+    var edadJubilacion = $("#edad-jubilacion").val();
+    return new Simulador(ingresos, afp, fondo, edadJubilacion);
 }
 
 /**
@@ -35,7 +36,7 @@ function obtenerIngresos() {
  * Génera el gráfico según los datos obtenidos del simulador.
  * @param {Simulador} simulador
  */
-function dibujarGrafico(simulador) {
+function dibujarGraficoTorta(simulador) {
     var data = google.visualization.arrayToDataTable([
         ['Item', 'Monto'],
         ['Commisiones', simulador.getComisiones()],
@@ -43,8 +44,10 @@ function dibujarGrafico(simulador) {
         ['Rentabilidad', simulador.getRentabilidad()]
     ]);
 
-    var chart = new google.visualization.PieChart(document.getElementById('piechart'));
-    chart.draw(data);
+    var options = {colors: ['#dc3912', '#3366cc', '#109618', '#ff9900']};
+
+    var chart = new google.visualization.PieChart(document.getElementById('grafico-torta'));
+    chart.draw(data, options);
 }
 
 /**
@@ -55,4 +58,32 @@ function poblarTabla(simulador) {
     $("#pension-renta-vitalicia").text("$" + simulador.getPensionRentaVitalicia().formatMoney());
     $("#pension-retiro-programado").text("$" + simulador.getPensionRetiroProgramado().formatMoney());
     $("#trabajadores-reparto").text(simulador.getTrabajadoresReparto());
+}
+
+/**
+ * Génera el gráfico según los datos obtenidos del simulador.
+ * @param {Simulador} simulador
+ */
+function dibujarGraficoHistorico(simulador) {
+    var data = google.visualization.arrayToDataTable(simulador.getEvolucionAhorro());
+
+    var options = {
+        isStacked: true,
+        seriesType: 'bars',
+        series: {
+            3: {
+                type: 'line',
+                targetAxisIndex: 1
+            }
+        },
+        colors: ['#3366cc', '#109618', '#dc3912', '#ff9900'],
+        vAxes: {
+            0: {title: 'Inversión Mensual'},
+            1: {title: 'Total acumulado'}
+        }
+    };
+
+    var chart = new google.visualization.ComboChart(document.getElementById('grafico-historico'));
+
+    chart.draw(data, options);
 }
