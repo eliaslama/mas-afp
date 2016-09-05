@@ -19,7 +19,7 @@ function prepararSimulador() {
     var afp = $("#afp").val();
     var fondo = $("#fondo").val();
     var edadJubilacion = $("#edad-jubilacion").val();
-    return new Simulador(ingresos, afp, fondo, edadJubilacion);
+    return new Simulador(ingresos, [1.47, 1.47], [1.0, -0.3]);
 }
 
 /**
@@ -29,7 +29,7 @@ function prepararSimulador() {
  * @returns {Array}
  */
 function obtenerIngresos() {
-    return [];
+    return [100, 100];
 }
 
 /**
