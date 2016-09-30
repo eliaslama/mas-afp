@@ -1,14 +1,50 @@
 /**
  * 
+ * @param {Date} fecha
+ * @param {Fondo} fondo
+ * @param {Number} sueldo_imponible
+ * @returns {Hito}
+ */
+function Hito(fecha, fondo, sueldo_imponible) {
+    this.fecha = fecha;
+    this.fondo = fondo;
+    this.sueldo_imponible = sueldo_imponible;
+    
+    /**
+     * Retorna la fecha en la que sucede el hito.
+     * @returns {Date}
+     */
+    this.getFecha = function () {
+        return this.fecha;
+    };
+    
+    /**
+     * Retorna el fondo que corresponde al hito.
+     * @returns {Fondo}
+     */
+    this.getFondo = function () {
+        return this.fondo;
+    };
+    
+    /**
+     * Retorna el sueldo imponible que corresponde al hito.
+     * @returns {Number}
+     */
+    this.getSueldoImponible = function () {
+        return this.sueldo_imponible;
+    };
+}
+/**
+ * 
  * @param {[Int]} ingresos Ingresos durante la vida laboral, para lagunas
  * simplemente llenar con 0. Debe tener size == n. Debe ser el ingreso
  * imponible, pues es sobre este que se cotiza el 10%.
  * @param {[float]} comisiones Comisiones durante la vida laboral, porcentaje
  * sobre el ingreso del mes correspondiente. Debe tener size == n.
  * @param {[float]} rentabilidades Rentabilidades durante periodo.
- * @returns {Simulador}
+ * @returns {Calculadora}
  */
-function Simulador(ingresos, comisiones, rentabilidades) {
+function Calculadora(ingresos, comisiones, rentabilidades) {
     var cotizacion = 0.1;
     this.ingresos = ingresos;
     this.comisiones = comisiones;
@@ -118,4 +154,26 @@ function Simulador(ingresos, comisiones, rentabilidades) {
         ];
     };
 
+}
+
+/**
+ * Simulador de fondo de pension a lo largo del tiempo.
+ * @param {[Hito]} hitos Hitos en la vida laboral del trabajador.
+ * @param {Date} simular_hasta Fecha hasta la que se debe efectuar la
+ * simulacion.
+ * @returns {Simulador}
+ */
+function Simulador(hitos, simular_hasta) {
+    this.hitos = hitos;
+    this.simular_hasta = simular_hasta;
+    
+    // No pueden haber hitos antes de esta fecha.
+    var prev_date = new Date("December 31, 1979 23:59:59");
+    for(var i = 0; i < this.hitos.length; i++) {
+        if(this.hitos[i].getFecha() < prev_date)
+            throw "Fecha debe ser posterior a diciembre 1979 y estar ordenadas";
+        prev_date = this.hitos[i].getFecha();
+    }
+    
+    
 }
