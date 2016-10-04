@@ -173,7 +173,22 @@ function Simulador(hitos, simular_hasta) {
         if(this.hitos[i].getFecha() < prev_date)
             throw "Fecha debe ser posterior a diciembre 1979 y estar ordenadas";
         prev_date = this.hitos[i].getFecha();
-    }
     
+    function calcular_ingresos() {
+        var ingresos = [];
+        var last_ingreso = 0;
+        var idx = 0;
+        var date = this.hitos[idx].getFecha();
+        while(date <= simular_hasta) {
+            if(idx < this.hitos.length && date === this.hitos[idx].getFecha()) {
+                last_ingreso = this.hitos[idx].sueldo_imponible();
+                idx++;
+            }
+            ingresos.push(last_ingreso);
+            
+        }
+    }
+    this.ingresos = [];
+    }
     
 }
