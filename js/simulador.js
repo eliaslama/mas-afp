@@ -166,6 +166,10 @@ function Calculadora(ingresos, comisiones, rentabilidades) {
 function Simulador(hitos, simular_hasta) {
     this.hitos = hitos;
     this.simular_hasta = simular_hasta;
+    this.data = new DataGetter();
+    this.dates = [];
+    this.fondos = [];
+    this.ingresos = [];
     
     // No pueden haber hitos antes de esta fecha.
     var prev_date = new Date("December 31, 1979 23:59:59");
@@ -173,22 +177,43 @@ function Simulador(hitos, simular_hasta) {
         if(this.hitos[i].getFecha() < prev_date)
             throw "Fecha debe ser posterior a diciembre 1979 y estar ordenadas";
         prev_date = this.hitos[i].getFecha();
+    }
     
-    function calcular_ingresos() {
-        var ingresos = [];
+    (function (parent) {
         var last_ingreso = 0;
+        var last_fondo = undefined;
         var idx = 0;
-        var date = this.hitos[idx].getFecha();
-        while(date <= simular_hasta) {
-            if(idx < this.hitos.length && date === this.hitos[idx].getFecha()) {
-                last_ingreso = this.hitos[idx].sueldo_imponible();
+        var date = new Date(parent.hitos[idx].getFecha());
+  
+        while(date <= parent.simular_hasta) {
+            if(idx < parent.hitos.length && date.getTime() === parent.hitos[idx].getFecha().getTime()) {
+                last_ingreso = parent.hitos[idx].getSueldoImponible();
+                last_fondo = parent.hitos[idx].getFondo();
                 idx++;
             }
-            ingresos.push(last_ingreso);
-            
+            parent.ingresos.push(last_ingreso);
+            parent.fondos.push(last_fondo);
+            parent.dates.push(new Date(date));
+            date.setMonth(date.getMonth() + 1);
         }
-    }
-    this.ingresos = [];
-    }
+        return false;
+    }) (this);
     
+    
+    this.comisiones = new Array(this.ingresos.length).fill(0);
+    this.rentabilidades = this.data.get_rentabilidades(this.dates, this.fondos);
+    
+    var parent = {'dates' : this.dates,
+                  'ingresos' : this.ingresos,
+                  'comisiones' : this.comisiones,
+                  'rentabilidades' : this.rentabilidades};
+
+    this.get_data = function(callback) {
+        parent.rentabilidades.done(function(rentabilidades){
+            callback(parent.dates,
+                     parent.ingresos,
+                     parent.comisiones,
+                     rentabilidades);
+        });
+    }; 
 }

@@ -21,14 +21,14 @@ Number.prototype.formatMoney = function (c, d, t) {
 
 function DataGetter() {    
 //    this._base_url = "http://localhost:8000";
-    this._base_url = "http://54.153.17.120:8000";
+    this._base_url = "http://54.153.17.120:3492";
     $.ajaxSetup({
         timeout: 3000, 
         retryAfter:7000
     });
     
     this._rentabilidad = $.ajax(
-            {url: this._base_url + "/api/indicador/realmensual"}
+            {url: this._base_url + "/api/indicador/realmensual/"}
     ).then(function(result){
             ret_val = [];
             if (result.status !== 'ok')
@@ -47,11 +47,28 @@ function DataGetter() {
         return ret_val;
     });
     
-    
+    /**
+     * 
+     * @param {Date} date Fecha de la cual se desea obtener rentabilidad.
+     * @param {func} callback Funcion para llamar con el resultado.
+     */
     this.get_rentabilidad = function(date, callback) {
-        this._rentabilidad.done(function(rentabilidad) {
+        return this._rentabilidad.done(function(rentabilidad) {
             var val = rentabilidad[date.getFullYear()][date.getMonth()];
             callback(val);
-        });
+        }).promise();
+    };
+    
+    this.get_rentabilidades = function(dates, fondos) {
+        return this._rentabilidad.then(function(rentabilidad) {
+            if(dates.length !== fondos.length)
+                throw "Dates y Fondos deben tener mismo largo";
+            var res = new Array(fondos.length);
+            for(var i = 0; i < dates.length; i++) {
+                var date = dates[i];
+                res[i] = rentabilidad[date.getFullYear()][date.getMonth()][fondos[i]];
+            }
+            return res;
+        }).promise();
     };
 }
