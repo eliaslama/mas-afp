@@ -19,6 +19,10 @@ Number.prototype.formatMoney = function (c, d, t) {
     return s + (j ? i.substr(0, j) + t : "") + i.substr(j).replace(/(\d{3})(?=\d)/g, "$1" + t) + (c ? d + Math.abs(n - i).toFixed(c).slice(2) : "");
 };
 
+Date.prototype.myEqual = function(d2) {
+    return this.getTime() === d2.getTime();
+};
+
 function DataGetter() {    
 //    this._base_url = "http://localhost:8000";
     this._base_url = "http://54.153.17.120:3492";
@@ -48,18 +52,26 @@ function DataGetter() {
     });
     
     /**
+     * Obtener rentabilidad para una fecha en especifico.
      * 
      * @param {Date} date Fecha de la cual se desea obtener rentabilidad.
      * @param {func} callback Funcion para llamar con el resultado.
+     * @returns {jquery.Promise}
      */
-    this.get_rentabilidad = function(date, callback) {
+    this.getRentabilidad = function(date, callback) {
         return this._rentabilidad.done(function(rentabilidad) {
             var val = rentabilidad[date.getFullYear()][date.getMonth()];
             callback(val);
         }).promise();
     };
     
-    this.get_rentabilidades = function(dates, fondos) {
+    /**
+     * Obtener rentabilidades para un arreglo de fechas.
+     * @param {type} dates
+     * @param {type} fondos
+     * @returns {jquery.Promise}
+     */
+    this.getRentabilidades = function(dates, fondos) {
         return this._rentabilidad.then(function(rentabilidad) {
             if(dates.length !== fondos.length)
                 throw "Dates y Fondos deben tener mismo largo";

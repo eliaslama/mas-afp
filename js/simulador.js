@@ -184,11 +184,13 @@ function Simulador(hitos, simular_hasta) {
         var last_fondo = undefined;
         var idx = 0;
         var date = new Date(parent.hitos[idx].getFecha());
+        var hito;
   
         while(date <= parent.simular_hasta) {
-            if(idx < parent.hitos.length && date.getTime() === parent.hitos[idx].getFecha().getTime()) {
-                last_ingreso = parent.hitos[idx].getSueldoImponible();
-                last_fondo = parent.hitos[idx].getFondo();
+            hito = parent.hitos[idx];
+            if(idx < parent.hitos.length && date.myEqual(hito.getFecha())) {
+                last_ingreso = hito.getSueldoImponible();
+                last_fondo = hito.getFondo();
                 idx++;
             }
             parent.ingresos.push(last_ingreso);
@@ -201,14 +203,29 @@ function Simulador(hitos, simular_hasta) {
     
     
     this.comisiones = new Array(this.ingresos.length).fill(0);
-    this.rentabilidades = this.data.get_rentabilidades(this.dates, this.fondos);
+    this.rentabilidades = this.data.getRentabilidades(this.dates, this.fondos);
     
     var parent = {'dates' : this.dates,
                   'ingresos' : this.ingresos,
                   'comisiones' : this.comisiones,
                   'rentabilidades' : this.rentabilidades};
 
-    this.get_data = function(callback) {
+    /**
+     * Callback to do something with the data.
+     * 
+     * @callback doSomethingCallback
+     * @param {[Date]} dates - Mes correspondiente.
+     * @param {[Number]} ingresos - Ingresos imponibles por mes.
+     * @param {[Number]} comisiones - Comisiones cobradas por la AFP mensual.
+     * @param {[Number]} rentabilidades - Rentabilidad mensual del fondo.
+     */
+    
+    /**
+     * Add two numbers together, then pass the results to a callback function.
+     * 
+     * @param {doSomethingCallback} callback - A callback to run with the data.
+     */
+    this.getData = function(callback) {
         parent.rentabilidades.done(function(rentabilidades){
             callback(parent.dates,
                      parent.ingresos,
