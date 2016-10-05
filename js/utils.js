@@ -61,7 +61,7 @@ function DataGetter() {
     this.getRentabilidad = function(date, callback) {
         return this._rentabilidad.done(function(rentabilidad) {
             var val = rentabilidad[date.getFullYear()][date.getMonth()];
-            callback(val);
+            callback(val/1000);
         }).promise();
     };
     
@@ -78,7 +78,7 @@ function DataGetter() {
             var res = new Array(fondos.length);
             for(var i = 0; i < dates.length; i++) {
                 var date = dates[i];
-                res[i] = rentabilidad[date.getFullYear()][date.getMonth()][fondos[i]];
+                res[i] = rentabilidad[date.getFullYear()][date.getMonth()][fondos[i]]/1000;
             }
             return res;
         }).promise();

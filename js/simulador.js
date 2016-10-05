@@ -56,13 +56,15 @@ function Calculadora(ingresos, comisiones, rentabilidades) {
     }
     
     this.meses = this.ingresos.length;
-    // Evolucion del fondo durante el tiempo
+    // Evolucion del fondo durante el tiempo. Valor del fondo en cada mes.
     this.fondo = new Array(this.meses + 1);
     // Acumulado de comisiones pagadas para cada mes.
     this.comisiones_pagadas = new Array(this.meses + 1);
     // Plata destinada desde el sueldo a pension (ahorro + comision).
     this.inversion_pension = new Array(this.meses + 1);
     this.fondo[0] = 0;
+    this.comisiones_pagadas[0] = 0;
+    this.inversion_pension[0] = 0;
     
     for(var i = 1; i <= this.meses; i++) {
         this.fondo[i] = (
@@ -76,7 +78,6 @@ function Calculadora(ingresos, comisiones, rentabilidades) {
                 this.inversion_pension[i - 1]
                 + this.ingresos[i - 1] * (this.comisiones[i - 1] + cotizacion));
     }
-    
     
     /**
      * Calcula el total de las comisiones pagadas por el cotizante durante toda
