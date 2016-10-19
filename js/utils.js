@@ -23,6 +23,22 @@ Date.prototype.myEqual = function(d2) {
     return this.getTime() === d2.getTime();
 };
 
+/**
+ * Parse a date string in the yyyy-mm-dd format.
+ * 
+ * @param {string} input
+ * @returns {Date}
+ */
+function parseDate(input) {
+  var parts = input.split('-');
+  return new Date(parts[0], parts[1]-1, parts[2]); // Note: months are 0-based
+}
+
+Date.prototype.YearMonthEqual = function(d2) {
+    return this.getFullYear() === d2.getFullYear()
+        && this.getMonth() === d2.getMonth();
+};
+
 function DataGetter() {    
 //    this._base_url = "http://localhost:8000";
     this._base_url = "http://54.153.17.120:3492";
@@ -39,7 +55,7 @@ function DataGetter() {
                 throw "Error getting data:" + result.status;
             var data = result.data;
             for (var i = 0; i < data.length; i++) {
-                date = new Date(Date.parse(data[i].fecha));
+                date = parseDate(data[i].fecha);
                 var year = date.getFullYear();
                 var month = date.getMonth();
                 if (ret_val[year] === undefined)
@@ -50,6 +66,29 @@ function DataGetter() {
         }
         return ret_val;
     });
+    
+    this._monthly_uf = function(year_from, year_to) {
+        return $.ajax({
+            url: this._base_url + "/api/indicador/uf_mensual",
+            data:{year_from:year_from, year_to:year_to}
+        }).then(function(result){
+            /**
+             * Returns an array containing the array of dates gathered and
+             * the array of values corresponding to each date. The date has as
+             * valid fields only year and month: [[dates], [values]].
+             */
+            ret_val = [];
+            ret_dates = [];
+            if(result.status !== 'ok')
+                throw "Error getting data:" + result.status;
+            var data = result.data;
+            for(var i = 0; i < data.length; i++) {
+                ret_dates.push(parseDate(data[i].fecha));
+                ret_val.push(data[i].valor);
+            }
+            return [ret_dates, ret_val];
+        });
+    };
     
     /**
      * Obtener rentabilidad para una fecha en especifico.
@@ -82,5 +121,30 @@ function DataGetter() {
             }
             return res;
         }).promise();
+    };
+    
+    /**
+     * Retorna UF del ultimo día del mes especificado.
+     * 
+     * @param {[Dates]} dates - Arreglo de fechas para las que se quieren
+     * obtener los valores, deben estar en orden de más antiguo a más nuevo.
+     * @returns {jquery.Promise}
+     */
+    this.getUFs = function(dates) {
+        return this._monthly_uf(dates[0].getFullYear(),
+                                dates[dates.length - 1].getFullYear()).then(
+            function(ufs_raw){
+                var ret_val = [];
+                var raw_idx = 0;
+                var date_idx = 0;
+                while(raw_idx < ufs_raw[0].length && date_idx < dates.length) {
+                    if(ufs_raw[0][raw_idx].YearMonthEqual(dates[date_idx])) {
+                        ret_val.push(ufs_raw[1][raw_idx]);
+                        date_idx++;
+                    }
+                    raw_idx++;
+                }
+                return ret_val;
+            }).promise();
     };
 }

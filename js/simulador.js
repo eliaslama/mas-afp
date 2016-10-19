@@ -42,13 +42,16 @@ function Hito(fecha, fondo, sueldo_imponible) {
  * @param {[float]} comisiones Comisiones durante la vida laboral, porcentaje
  * sobre el ingreso del mes correspondiente. Debe tener size == n.
  * @param {[float]} rentabilidades Rentabilidades durante periodo.
+ * @param {[float]} ufs al final de cada mes, imporante pues rentabilidad es
+ * sobre uf.
  * @returns {Calculadora}
  */
-function Calculadora(ingresos, comisiones, rentabilidades) {
+function Calculadora(ingresos, comisiones, rentabilidades, ufs) {
     var cotizacion = 0.1;
     this.ingresos = ingresos;
     this.comisiones = comisiones;
     this.rentabilidades = rentabilidades;
+    this.ufs = ufs;
 
     if(this.ingresos.length !== this.comisiones.length
        || this.ingresos.length !== this.rentabilidades.length) {
@@ -57,7 +60,11 @@ function Calculadora(ingresos, comisiones, rentabilidades) {
     
     this.meses = this.ingresos.length;
     // Evolucion del fondo durante el tiempo. Valor del fondo en cada mes.
+    // Monto en UFs
     this.fondo = new Array(this.meses + 1);
+    // Evolucion del fondo durante el tiempo. Valor del fondo en cada mes. Monto
+    // en pesos chilenos.
+    this.fondo_clp = new Array(this.meses + 1);
     // Acumulado de comisiones pagadas para cada mes.
     this.comisiones_pagadas = new Array(this.meses + 1);
     // Plata destinada desde el sueldo a pension (ahorro + comision).
@@ -70,7 +77,10 @@ function Calculadora(ingresos, comisiones, rentabilidades) {
         this.fondo[i] = (
                 this.fondo[i - 1]
                 + this.fondo[i - 1] * this.rentabilidades[i - 1]
-                + this.ingresos[i - 1] * cotizacion);
+                + (this.ingresos[i - 1] * cotizacion)/this.ufs[i-1]);
+        // Tecnicamente deberia ser la UF del principio del mes i, pero solo
+        // tenemos la del fin de mes i - 1. No deberia ser muy distinta.
+        this.fondo_clp[i] = this.fondo[i] * this.ufs[i-1];
         this.comisiones_pagadas[i] = (
                 this.comisiones_pagadas[i - 1]
                 + this.ingresos[i - 1] * this.comisiones[i - 1]);
@@ -205,11 +215,13 @@ function Simulador(hitos, simular_hasta) {
     
     this.comisiones = new Array(this.ingresos.length).fill(0);
     this.rentabilidades = this.data.getRentabilidades(this.dates, this.fondos);
+    this.ufs = this.data.getUFs(this.dates);
     
-    var parent = {'dates' : this.dates,
+    var parent = {'comisiones' : this.comisiones,
+                  'dates' : this.dates,
                   'ingresos' : this.ingresos,
-                  'comisiones' : this.comisiones,
-                  'rentabilidades' : this.rentabilidades};
+                  'rentabilidades' : this.rentabilidades,
+                  'ufs': this.ufs};
 
     /**
      * Callback to do something with the data.
@@ -219,19 +231,30 @@ function Simulador(hitos, simular_hasta) {
      * @param {[Number]} ingresos - Ingresos imponibles por mes.
      * @param {[Number]} comisiones - Comisiones cobradas por la AFP mensual.
      * @param {[Number]} rentabilidades - Rentabilidad mensual del fondo.
+     * @param {[Number]} ufs - Valor de la uf por mes especificado.
      */
     
     /**
-     * Add two numbers together, then pass the results to a callback function.
+     * Obtener los datos desde el simulador y llamar a la callback especificada.
      * 
      * @param {doSomethingCallback} callback - A callback to run with the data.
      */
     this.getData = function(callback) {
-        parent.rentabilidades.done(function(rentabilidades){
-            callback(parent.dates,
-                     parent.ingresos,
-                     parent.comisiones,
-                     rentabilidades);
+        return Promise.all(
+            [ parent.rentabilidades
+            , parent.ufs
+            ]).then(function(result) {
+                return callback(parent.dates,
+                                parent.ingresos,
+                                parent.comisiones,
+                                result[0],
+                                result[1]);
+            });
+    };
+    
+    this.getCalculadora = function(callback) {
+        this.getData(function(dates, ingresos, comisiones, rentabilidades, ufs) {
+            callback(new Calculadora(ingresos, comisiones, rentabilidades, ufs));
         });
-    }; 
+    };
 }
